@@ -10,12 +10,18 @@
             "email": "sircampydevelop@gmail.com",
             "role": "Developer",
             "homepage": "http://www.stefanocampese.xyz"
+        },
+        {
+            "name": "Jacek Partyka",
+            "email": "biuro@weblogic.pl",
+            "role": "Developer",
+            "homepage": "https://www.weblogic.pl"
         }
     ],
     "require": {
-        "php": ">=5.4.0",
+        "php": ">=7.2.0",
         "respect/validation": "^1.1",
-        "guzzlehttp/guzzle": "~5.0"
+        "guzzlehttp/guzzle": "~6.0"
     },
     "autoload": {
         "classmap": [
