@@ -179,16 +179,15 @@ class XenConnection
 	function xenrpc_parseresponse($response)
 	{
 
-
 		if (!Validator::arrayType()->validate($response) && !Validator::key('Status')->validate($response))
 		{
-
+            
 			return new XenResponse($response);
 		}
 		else
 		{
-
-			if (Validator::key('Status', Validator::equals('Success'))->validate($response))
+            
+            if (Validator::key('Status', Validator::equals('Success'))->validate($response))
 			{
 				return new XenResponse($response);
 			}
@@ -234,8 +233,25 @@ class XenConnection
 
 	function xenrpc_method($name, $params)
 	{
+        // hack for int64
+        if ($name == 'VDI.resize')
+		{
+            $size = $params[2];
+            $params[2] = 0;
+            $encoded_request = xmlrpc_encode_request($name, $params);
+            $encoded_request = str_replace('<int>0</int>', '<int>'.$size.'</int>', $encoded_request);
+        }
+        elseif ($name == 'VM.set_memory')
+		{
+            $encoded_request = xmlrpc_encode_request($name, $params);
+            $encoded_request = str_replace('<int>0</int>', '<int>'.$params[2].'</int>', $encoded_request);
+        }
+        else
+        {
+            $encoded_request = xmlrpc_encode_request($name, $params);
+        }
 
-		$encoded_request = xmlrpc_encode_request($name, $params);
+        $encoded_request = str_replace('<string>replace_empty_struct</string>', '<struct></struct>', $encoded_request);
 
 		return $encoded_request;
 	}
@@ -252,9 +268,8 @@ class XenConnection
 
 	function xenrpc_request($url, $req)
 	{
-
-		$client = new Client();
-
+        $client = new Client();
+        
 		$response = $client->post($url,
 			[
 
@@ -273,9 +288,9 @@ class XenConnection
 		while (!$body->eof())
 		{
 			$xml .= $body->read(1024);
-		}
+        }
 
-
+       
 		return xmlrpc_decode($xml);
 	}
 
@@ -291,7 +306,6 @@ class XenConnection
 
 	function __call($name, $args)
 	{
-
 		if (!Validator::arrayType()->validate($args))
 		{
 			$args = array();
@@ -300,7 +314,7 @@ class XenConnection
 		list($mod, $method) = explode('__', $name);
 		$response = $this->xenrpc_parseresponse($this->xenrpc_request($this->getUrl(),
 			$this->xenrpc_method($mod . '.' . $method, array_merge(array($this->getSessionId()), $args))));
-
+        
 		return $response;
 	}
 

@@ -8,13 +8,14 @@ class XenVirtualMachine extends XenElement
 {
 
 	private $name;
-	private $vmId;
+    private $vmId;
+    private $uuid;
 
 	public function __construct($xenconnection, $name, $vmId)
 	{
 		parent::__construct($xenconnection);
 		$this->name = $name;
-		$this->vmId = $vmId;
+        $this->vmId = $vmId;
 	}
 
 
@@ -369,8 +370,8 @@ class XenVirtualMachine extends XenElement
 	 */
 	function getGuestMetrics()
 	{
-		$VMG = $this->getXenconnection()->VM__get_guest_metrics($this->getVmId());
-
+        $VMG = $this->getXenconnection()->VM__get_guest_metrics($this->getVmId());
+        
 		return $this->getXenconnection()->VM_guest_metrics__get_record($VMG->getValue());
 	}
 
@@ -430,7 +431,45 @@ class XenVirtualMachine extends XenElement
 		}
 
 		return $response;
-	}
+    }
+    
+    function getVIFs()
+    {
+        $vifs = [];
+        $VIF    = $this->getXenconnection()->VM__get_VIFs($this->getVmId());
+
+        foreach($VIF->getValue() as $v)
+        {
+            $vif = new XenVIF($this->getXenconnection(), $v);
+            $vifs[] = $vif;
+        }
+
+        return $vifs;
+    }
+
+    function getVDIs()
+    {
+        $vdis = [];
+        $VBD    = $this->getXenconnection()->VBD__get_all();
+        //print_r($VBD);
+		foreach ($VBD->getValue() as $bd)
+		{
+            $responsevm   = $this->getXenconnection()->VBD__get_VM($bd);
+            //echo $responsevm->getValue().' - '.$responsetype->getValue()."\n";
+            
+			if ($responsevm->getValue() == $this->getVmId())
+			{
+                $responsetype = $this->getXenconnection()->VBD__get_type($bd);
+                if ($responsetype->getValue() == "Disk")
+                {
+				    $VDI    = $this->getXenconnection()->VBD__get_VDI($bd);
+                    $vdis[] = new XenVDI($this->getXenconnection(), $VDI->getValue());
+                }
+			}
+        }
+        
+        return $vdis;
+    }
 
 	/**
 	 * Get the VM disk space by passing her uuid.
@@ -570,9 +609,15 @@ class XenVirtualMachine extends XenElement
 	 *
 	 * @return XenResponse $response
 	 */
-	public function copy($name)
+	public function copy($name, $SRuuid)
 	{
-		return $this->getXenconnection()->VM__copy($this->getVmId(), $name, "");
+        $response = $this->getXenconnection()->VM__copy($this->getVmId(), $name, $SRuuid);
+        if ($response->getStatus() == 'Success')
+        {
+            return new XenVirtualMachine($this->getXenconnection(), $name, $response->getValue());
+        }
+
+        throw new \Exception("Error cloning VM - ".print_r($response->getErorDescription(), true));
 	}
 
 
@@ -845,7 +890,35 @@ class XenVirtualMachine extends XenElement
 	public function getNameLabel()
 	{
 		return $this->getXenconnection()->VM__get_name_label($this->getVmId());
-	}
+    }
+    
+    public function getRecord()
+    {
+        return $this->getXenconnection()->VM__get_record($this->getVmId());
+    }
+
+    public function setMemory($gb)
+    {
+        return $this->getXenconnection()->VM__set_memory($this->getVmId(), $gb*1024*1024*1024);
+    }
+
+    public function setVCPUs($cores)
+    {
+        $this->getXenconnection()->VM__set_VCPUs_max($this->getVmId(), $cores);
+        return $this->getXenconnection()->VM__set_VCPUs_at_startup($this->getVmId(), $cores);
+    }
+
+    public function setDiskSize($gb)
+    {
+        $vdis = $this->getVDIs();
+        return $vdis[0]->resize($gb*1024*1024*1024);
+    }
+
+    public function setNetworkMAC($mac)
+    {
+        $vifs = $this->getVIFs();
+        return $vifs[0]->setMAC($mac);
+    }
 
 }
 

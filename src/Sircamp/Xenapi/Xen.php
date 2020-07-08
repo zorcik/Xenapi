@@ -51,9 +51,22 @@ class Xen
 	 */
 	public function getVMByNameLabel($name): XenVirtualMachine
 	{
-		$response = new XenResponse($this->xenconnection->VM__get_by_name_label($name));
+        $response = new XenResponse($this->xenconnection->VM__get_by_name_label($name));
 
 		return new XenVirtualMachine($this->xenconnection, $name, $response->getValue()[0]);
+	}
+
+	/**
+	 * Get VM by UUID.
+	 *
+	 * @param mixed $uuid the UUID of VM
+	 *
+	 * @return mixed
+	 */
+	public function getVMByUUID($uuid): XenVirtualMachine
+	{
+		$response = new XenResponse($this->xenconnection->VM__get_by_uuid($uuid));
+		return new XenVirtualMachine($this->xenconnection, $uuid, $response->getValue());
 	}
 
 	/**

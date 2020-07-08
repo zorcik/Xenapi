@@ -13,16 +13,34 @@ class XenResponse
 
 	public function __construct($args)
 	{
+            foreach ($args as $key => $argument)
+    		{
+                $class    = new ReflectionClass('Sircamp\Xenapi\Connection\XenResponse');
 
-		foreach ($args as $key => $argument)
+                $property = $class->getProperty($key);
+                $property->setAccessible(true);
+                $property->setValue($this, $argument);
+
+            }
+        
+
+        /*
+       print_r((array)$args);
+		foreach ((array)$args as $key => $argument)
 		{
-			$class    = new ReflectionClass('Sircamp\Xenapi\Connection\XenResponse');
+            $class    = new ReflectionClass('Sircamp\Xenapi\Connection\XenResponse');
+            if (!$key || (string)$key == ''/* || !property_exists($class, $key
+            {
+                continue;
+            }
+            echo "Key: $key, Arg: $argument\n";
 			$property = $class->getProperty($key);
 			$property->setAccessible(true);
 			$property->setValue($this, $argument);
 
-		}
-
+            print_r($class);
+        }
+*/
 	}
 
 	/**
