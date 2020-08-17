@@ -93,7 +93,7 @@ class XenVirtualMachine extends XenElement
 		$hostRefString = "";
 		if ($hostRef == null)
 		{
-			throw new \IllegalArgumentException("hostRef must be not NULL", 1);
+			throw new \Exception("hostRef must be not NULL", 1);
 
 		}
 		else
@@ -126,7 +126,7 @@ class XenVirtualMachine extends XenElement
 		$hostRefString = "";
 		if ($hostRef == null)
 		{
-			throw new \IllegalArgumentException("hostRef must be not NULL", 1);
+			throw new \Exception("hostRef must be not NULL", 1);
 
 		}
 		else
@@ -268,7 +268,7 @@ class XenVirtualMachine extends XenElement
 		$hostRefString = "";
 		if ($hostRef == null)
 		{
-			throw new \IllegalArgumentException("The where you want start new machine, must be set!", 1);
+			throw new \Exception("The where you want start new machine, must be set!", 1);
 
 		}
 		else
@@ -912,6 +912,12 @@ class XenVirtualMachine extends XenElement
     {
         $vdis = $this->getVDIs();
         return $vdis[0]->resize($gb*1024*1024*1024);
+    }
+
+    public function getFirstVDI()
+    {
+        $vdis = $this->getVDIs();
+        return $vdis[0];
     }
 
     public function setNetworkMAC($mac)

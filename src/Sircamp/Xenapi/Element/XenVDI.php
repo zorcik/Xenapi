@@ -34,6 +34,11 @@ class XenVDI extends XenElement
         return $this->getXenconnection()->VDI__resize($this->uuid, $size);
     }
 
+    public function rename($name)
+    {
+        return $this->getXenconnection()->VDI__set_name_label($this->uuid, $name);
+    }
+
 }
 
 ?>
